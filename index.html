@@ -431,10 +431,10 @@
       // Configuration
 const CONFIG = {
   GITHUB: {
-    REPO_OWNER: 'j4rajerz',                  // یوزرنیم گیتهاب
-    REPO_NAME: 'employee-survey-data',       // فقط اسم ریپو (نه کل لینک)
-    DATA_FILE: 'data.json',                  // اسم فایل داده
-    PAT: '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'  // توکن
+    REPO_OWNER: 'j4rajerz',
+    REPO_NAME: 'employee-survey-data',
+    DATA_FILE: 'data.json',
+    PAT: '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'
   },
   ADMIN: {
     USERNAME: 'abbas',
@@ -625,46 +625,52 @@ async function loadData() {
 }
 
 async function saveData() {
-    try {
-        const url = `https://api.github.com/repos/${CONFIG.GITHUB.REPO_OWNER}/${CONFIG.GITHUB.REPO_NAME}/contents/${CONFIG.GITHUB.DATA_FILE}`;
-        
-        const dataToSave = {
-            assistants: state.assistants,
-            criteria: state.criteria,
-            surveyData: state.surveyData
-        };
+  try {
+    // قبل از ذخیره، یکبار فایل را بگیر تا sha به روز شود
+    const latest = await fetch(`https://api.github.com/repos/${CONFIG.GITHUB.REPO_OWNER}/${CONFIG.GITHUB.REPO_NAME}/contents/${CONFIG.GITHUB.DATA_FILE}`, {
+      headers: {
+        Authorization: `token ${CONFIG.GITHUB.PAT}`,
+        Accept: "application/vnd.github.v3+json"
+      }
+    });
+    const latestFile = await latest.json();
+    state.fileSha = latestFile.sha;
 
-        const base64Content = btoa(JSON.stringify(dataToSave, null, 2));
+    const url = `https://api.github.com/repos/${CONFIG.GITHUB.REPO_OWNER}/${CONFIG.GITHUB.REPO_NAME}/contents/${CONFIG.GITHUB.DATA_FILE}`;
+    const dataToSave = {
+      assistants: state.assistants,
+      criteria: state.criteria,
+      surveyData: state.surveyData
+    };
+    const base64Content = btoa(JSON.stringify(dataToSave, null, 2));
 
-        const res = await fetch(url, {
-            method: "PUT",
-            headers: {
-                Authorization: `token ${CONFIG.GITHUB.PAT}`,
-                Accept: "application/vnd.github.v3+json"
-            },
-            body: JSON.stringify({
-                message: "Update survey data",
-                content: base64Content,
-                sha: state.fileSha
-            })
-        });
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${CONFIG.GITHUB.PAT}`,
+        Accept: "application/vnd.github.v3+json"
+      },
+      body: JSON.stringify({
+        message: "Update survey data",
+        content: base64Content,
+        sha: state.fileSha
+      })
+    });
 
-        if (!res.ok) {
-            const err = await res.text();
-            console.error("GitHub Save Error:", err);
-            alert("❌ خطا در ذخیره داده روی GitHub");
-            return;
-        }
-
-        const result = await res.json();
-        state.fileSha = result.content.sha; // sha جدید بعد از ذخیره موفق
-
-        // به‌روزرسانی رابط کاربری بعد از ذخیره موفق
-        updateUI();
-
-    } catch (error) {
-        console.error("Error saving data:", error);
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("GitHub Save Error:", err);
+      alert("❌ خطا در ذخیره داده روی GitHub");
+      return;
     }
+
+    const result = await res.json();
+    state.fileSha = result.content.sha;
+    updateUI();
+
+  } catch (error) {
+    console.error("Error saving data:", error);
+  }
 }
 
 // ⏳ رفرش خودکار پنل مدیر هر ۵ ثانیه

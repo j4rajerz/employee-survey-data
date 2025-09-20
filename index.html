@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Survey System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0f0f0f;
+            --text-light: #ffffff;
+            --accent-red: #d32f2f;
+            --accent-green: #388e3c;
+            --card-bg: #1a1a1a;
+            --border-radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Login Page Styles */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .login-form {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--accent-red);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background-color: #2a2a2a;
+            color: var(--text-light);
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-red);
+            color: white;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            background-color: #b71c1c;
+        }
+        
+        /* Admin Dashboard Styles */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-red);
+        }
+        
+        .chart-container {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+        }
+        
+        .chart-container h3 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .settings-section {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+        }
+        
+        .settings-section h3 {
+            margin-bottom: 20px;
+            color: var(--accent-red);
+        }
+        
+        .settings-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-list {
+            margin-top: 15px;
+        }
+        
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #2a2a2a;
+            margin-bottom: 10px;
+            border-radius: 6px;
+        }
+        
+        .list-item-actions button {
+            margin-left: 10px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: var(--accent-green);
+            color: white;
+        }
+        
+        .form-inline {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .form-inline input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background-color: #2a2a2a;
+            color: var(--text-light);
+        }
+        
+        /* Survey Page Styles */
+        .survey-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .assistants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .assistant-btn {
+            background-color: var(--accent-red);
+            color: white;
+            padding: 30px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        
+        .assistant-btn.completed {
+            background-color: var(--accent-green);
+        }
+        
+        .assistant-btn:hover:not(.completed) {
+            background-color: #b71c1c;
+        }
+        
+        .criteria-container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+        
+        .criteria-question {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .rating-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .rating-btn {
+            padding: 15px 30px;
+            border: 2px solid #333;
+            border-radius: var(--border-radius);
+            background-color: #2a2a2a;
+            color: var(--text-light);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .rating-btn:hover {
+            background-color: #3a3a3a;
+        }
+        
+        .rating-btn.selected {
+            border-color: var(--accent-red);
+            background-color: rgba(211, 47, 47, 0.2);
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .final-submit-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .logout-btn {
+            background-color: transparent;
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+        
+        .logout-btn:hover {
+            background-color: rgba(211, 47, 47, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="page active">
+        <div class="login-container">
+            <div class="login-form">
+                <h2>Admin Login</h2>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter password">
+                </div>
+                <button id="login-btn" class="btn btn-primary">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="page">
+        <div class="container">
+            <div class="admin-header">
+                <h1>Employee Survey System - Admin Dashboard</h1>
+                <button id="logout-btn" class="btn logout-btn">Logout</button>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Survey Page Views</h3>
+                    <div id="page-views" class="value">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Completed Surveys</h3>
+                    <div id="completed-surveys" class="value">0</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <h3>Average Scores per Assistant</h3>
+                <canvas id="scores-chart"></canvas>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Assistants Management</h3>
+                <div class="settings-item">
+                    <div class="form-inline">
+                        <input type="text" id="new-assistant" placeholder="Enter assistant name">
+                        <button id="add-assistant-btn" class="btn btn-primary btn-small">Add Assistant</button>
+                    </div>
+                    <div class="item-list" id="assistants-list">
+                        <!-- Assistants will be listed here -->
+                    </div>
+                </div>
+                
+                <h3>Performance Criteria Management</h3>
+                <div class="settings-item">
+                    <div class="form-inline">
+                        <input type="text" id="new-criterion" placeholder="Enter criterion title">
+                        <button id="add-criterion-btn" class="btn btn-primary btn-small">Add Criterion</button>
+                    </div>
+                    <div class="item-list" id="criteria-list">
+                        <!-- Criteria will be listed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Survey Page -->
+    <div id="survey-page" class="page">
+        <div class="container survey-container">
+            <h1 style="text-align: center; margin-bottom: 30px;">Employee Feedback Survey</h1>
+            
+            <div id="assistants-view">
+                <div class="assistants-grid" id="assistants-grid">
+                    <!-- Assistant buttons will be added here -->
+                </div>
+                
+                <div class="final-submit-container hidden" id="final-submit-container">
+                    <button id="final-submit-btn" class="btn btn-success">Final Submit</button>
+                </div>
+            </div>
+            
+            <div id="criteria-view" class="hidden">
+                <div class="criteria-container">
+                    <div class="criteria-question" id="criterion-text"></div>
+                    
+                    <div class="rating-options">
+                        <button class="rating-btn" data-value="100">Good</button>
+                        <button class="rating-btn" data-value="50">Average</button>
+                        <button class="rating-btn" data-value="0">Poor</button>
+                    </div>
+                    
+                    <div class="nav-buttons">
+                        <button id="prev-criterion-btn" class="btn btn-primary">Previous</button>
+                        <span id="progress-text">1 of 5</span>
+                        <button id="next-criterion-btn" class="btn btn-primary">Next</button>
+                    </div>
+                </div>
+                
+                <div id="submit-container" class="hidden">
+                    <button id="submit-assistant-btn" class="btn btn-success" style="width: 100%;">Submit Feedback</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // Configuration
+const CONFIG = {
+  GITHUB: {
+    REPO_OWNER: 'j4rajerz',                  // یوزرنیم گیتهاب
+    REPO_NAME: 'employee-survey-data',       // فقط اسم ریپو (نه کل لینک)
+    DATA_FILE: 'data.json',                  // اسم فایل داده
+    PAT: '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'  // توکن
+  },
+  ADMIN: {
+    USERNAME: 'abbas',
+    PASSWORD: '1335'
+  }
+};
+
+        // Application State
+        const state = {
+            // Admin data
+            assistants: [],
+            criteria: [],
+            surveyData: {
+                pageViews: 0,
+                completedSurveys: 0,
+                responses: []
+            },
+            
+            // Survey progress
+            currentAssistant: null,
+            currentCriterionIndex: 0,
+            assistantResponses: {},
+            completedAssistants: {}
+        };
+
+        // DOM Elements
+        const elements = {
+            // Pages
+            loginPage: document.getElementById('login-page'),
+            adminDashboard: document.getElementById('admin-dashboard'),
+            surveyPage: document.getElementById('survey-page'),
+            
+            // Login
+            usernameInput: document.getElementById('username'),
+            passwordInput: document.getElementById('password'),
+            loginBtn: document.getElementById('login-btn'),
+            logoutBtn: document.getElementById('logout-btn'),
+            
+            // Admin Dashboard
+            pageViews: document.getElementById('page-views'),
+            completedSurveys: document.getElementById('completed-surveys'),
+            scoresChart: document.getElementById('scores-chart'),
+            newAssistant: document.getElementById('new-assistant'),
+            addAssistantBtn: document.getElementById('add-assistant-btn'),
+            assistantsList: document.getElementById('assistants-list'),
+            newCriterion: document.getElementById('new-criterion'),
+            addCriterionBtn: document.getElementById('add-criterion-btn'),
+            criteriaList: document.getElementById('criteria-list'),
+            
+            // Survey Page
+            assistantsGrid: document.getElementById('assistants-grid'),
+            finalSubmitContainer: document.getElementById('final-submit-container'),
+            finalSubmitBtn: document.getElementById('final-submit-btn'),
+            assistantsView: document.getElementById('assistants-view'),
+            criteriaView: document.getElementById('criteria-view'),
+            criterionText: document.getElementById('criterion-text'),
+            ratingButtons: document.querySelectorAll('.rating-btn'),
+            prevCriterionBtn: document.getElementById('prev-criterion-btn'),
+            nextCriterionBtn: document.getElementById('next-criterion-btn'),
+            progressText: document.getElementById('progress-text'),
+            submitContainer: document.getElementById('submit-container'),
+            submitAssistantBtn: document.getElementById('submit-assistant-btn')
+        };
+
+        // Chart.js instance
+        let scoresChart = null;
+
+        // Initialize the application
+        function init() {
+            // Check if we're on the admin page or survey page
+            const isAdminPage = window.location.pathname.includes('admin');
+            
+            if (isAdminPage) {
+                // Check if user is already logged in
+                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                if (isLoggedIn) {
+                    showAdminDashboard();
+                    loadData();
+                } else {
+                    showLoginPage();
+                }
+            } else {
+                // Show survey page
+                showSurveyPage();
+                incrementPageViews();
+                loadData();
+            }
+            
+            setupEventListeners();
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Login
+            elements.loginBtn.addEventListener('click', handleLogin);
+            elements.logoutBtn.addEventListener('click', handleLogout);
+            
+            // Admin management
+            elements.addAssistantBtn.addEventListener('click', addAssistant);
+            elements.addCriterionBtn.addEventListener('click', addCriterion);
+            
+            // Survey
+            elements.ratingButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const value = parseInt(e.target.dataset.value);
+                    selectRating(value);
+                });
+            });
+            
+            elements.prevCriterionBtn.addEventListener('click', showPreviousCriterion);
+            elements.nextCriterionBtn.addEventListener('click', showNextCriterion);
+            elements.submitAssistantBtn.addEventListener('click', submitAssistantFeedback);
+            elements.finalSubmitBtn.addEventListener('click', submitAllFeedback);
+        }
+
+        // Authentication functions
+        function handleLogin() {
+            const username = elements.usernameInput.value;
+            const password = elements.passwordInput.value;
+            
+            if (username === CONFIG.ADMIN.USERNAME && password === CONFIG.ADMIN.PASSWORD) {
+                localStorage.setItem('isLoggedIn', 'true');
+                showAdminDashboard();
+                loadData();
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.setItem('isLoggedIn', 'false');
+            showLoginPage();
+        }
+
+        // Page navigation
+        function showLoginPage() {
+            elements.loginPage.classList.add('active');
+            elements.adminDashboard.classList.remove('active');
+            elements.surveyPage.classList.remove('active');
+        }
+
+        function showAdminDashboard() {
+            elements.loginPage.classList.remove('active');
+            elements.adminDashboard.classList.add('active');
+            elements.surveyPage.classList.remove('active');
+        }
+
+        function showSurveyPage() {
+            elements.loginPage.classList.remove('active');
+            elements.adminDashboard.classList.remove('active');
+            elements.surveyPage.classList.add('active');
+        }
+
+        // GitHub API functions
+async function loadData() {
+    try {
+        const url = `https://api.github.com/repos/${CONFIG.GITHUB.REPO_OWNER}/${CONFIG.GITHUB.REPO_NAME}/contents/${CONFIG.GITHUB.DATA_FILE}`;
+        
+        const res = await fetch(url, {
+            headers: {
+                Authorization: `token ${CONFIG.GITHUB.PAT}`,
+                Accept: "application/vnd.github.v3+json"
+            }
+        });
+
+        if (!res.ok) {
+            throw new Error("خطا در خواندن data.json از GitHub");
+        }
+
+        const file = await res.json();
+        const content = atob(file.content); // Base64 → JSON string
+        const data = JSON.parse(content);
+
+        // انتقال داده‌ها به state
+        state.assistants = data.assistants || [];
+        state.criteria = data.criteria || [];
+        state.surveyData = data.surveyData || { pageViews: 0, completedSurveys: 0, responses: [] };
+
+        // ذخیره sha برای آپدیت‌های بعدی
+        state.fileSha = file.sha;
+
+        // به‌روزرسانی رابط کاربری (جدول و نمودار مدیر)
+        updateUI();
+
+    } catch (error) {
+        console.error("Error loading data:", error);
+    }
+}
+
+async function saveData() {
+    try {
+        const url = `https://api.github.com/repos/${CONFIG.GITHUB.REPO_OWNER}/${CONFIG.GITHUB.REPO_NAME}/contents/${CONFIG.GITHUB.DATA_FILE}`;
+        
+        const dataToSave = {
+            assistants: state.assistants,
+            criteria: state.criteria,
+            surveyData: state.surveyData
+        };
+
+        const base64Content = btoa(JSON.stringify(dataToSave, null, 2));
+
+        const res = await fetch(url, {
+            method: "PUT",
+            headers: {
+                Authorization: `token ${CONFIG.GITHUB.PAT}`,
+                Accept: "application/vnd.github.v3+json"
+            },
+            body: JSON.stringify({
+                message: "Update survey data",
+                content: base64Content,
+                sha: state.fileSha
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.text();
+            console.error("GitHub Save Error:", err);
+            alert("❌ خطا در ذخیره داده روی GitHub");
+            return;
+        }
+
+        const result = await res.json();
+        state.fileSha = result.content.sha; // sha جدید بعد از ذخیره موفق
+
+        // به‌روزرسانی رابط کاربری بعد از ذخیره موفق
+        updateUI();
+
+    } catch (error) {
+        console.error("Error saving data:", error);
+    }
+}
+
+// ⏳ رفرش خودکار پنل مدیر هر ۵ ثانیه
+function startAutoRefreshForAdmin() {
+    // فقط وقتی مدیر وارد شده اجرا بشه
+    if (state.isAdmin) {
+        setInterval(loadData, 5000);
+    }
+}
+
+
+        function incrementPageViews() {
+            state.surveyData.pageViews++;
+            saveData();
+        }
+
+        // Admin management functions
+        function addAssistant() {
+            const name = elements.newAssistant.value.trim();
+            if (name) {
+                state.assistants.push(name);
+                elements.newAssistant.value = '';
+                saveData();
+            }
+        }
+
+        function editAssistant(index, newName) {
+            if (newName.trim()) {
+                state.assistants[index] = newName.trim();
+                saveData();
+            }
+        }
+
+        function deleteAssistant(index) {
+            state.assistants.splice(index, 1);
+            saveData();
+        }
+
+        function addCriterion() {
+            const title = elements.newCriterion.value.trim();
+            if (title) {
+                state.criteria.push(title);
+                elements.newCriterion.value = '';
+                saveData();
+            }
+        }
+
+        function editCriterion(index, newTitle) {
+            if (newTitle.trim()) {
+                state.criteria[index] = newTitle.trim();
+                saveData();
+            }
+        }
+
+        function deleteCriterion(index) {
+            state.criteria.splice(index, 1);
+            saveData();
+        }
+
+        // Survey functions
+        function startAssistantSurvey(assistantIndex) {
+            state.currentAssistant = assistantIndex;
+            state.currentCriterionIndex = 0;
+            elements.assistantsView.classList.add('hidden');
+            elements.criteriaView.classList.remove('hidden');
+            showCurrentCriterion();
+        }
+
+        function showCurrentCriterion() {
+            const criterion = state.criteria[state.currentCriterionIndex];
+            elements.criterionText.textContent = criterion;
+            elements.progressText.textContent = `${state.currentCriterionIndex + 1} of ${state.criteria.length}`;
+            
+            // Reset rating buttons
+            elements.ratingButtons.forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Check if we already have a rating for this criterion
+            const assistantKey = `assistant-${state.currentAssistant}`;
+            if (state.assistantResponses[assistantKey] && 
+                state.assistantResponses[assistantKey][state.currentCriterionIndex] !== undefined) {
+                const rating = state.assistantResponses[assistantKey][state.currentCriterionIndex];
+                elements.ratingButtons.forEach(btn => {
+                    if (parseInt(btn.dataset.value) === rating) {
+                        btn.classList.add('selected');
+                    }
+                });
+            }
+            
+            // Show/hide navigation buttons
+            elements.prevCriterionBtn.classList.toggle('hidden', state.currentCriterionIndex === 0);
+            
+            if (state.currentCriterionIndex === state.criteria.length - 1) {
+                elements.nextCriterionBtn.classList.add('hidden');
+                elements.submitContainer.classList.remove('hidden');
+            } else {
+                elements.nextCriterionBtn.classList.remove('hidden');
+                elements.submitContainer.classList.add('hidden');
+            }
+        }
+
+        function selectRating(value) {
+            const assistantKey = `assistant-${state.currentAssistant}`;
+            if (!state.assistantResponses[assistantKey]) {
+                state.assistantResponses[assistantKey] = [];
+            }
+            
+            state.assistantResponses[assistantKey][state.currentCriterionIndex] = value;
+            
+            // Update UI
+            elements.ratingButtons.forEach(btn => {
+                btn.classList.remove('selected');
+                if (parseInt(btn.dataset.value) === value) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+
+        function showPreviousCriterion() {
+            if (state.currentCriterionIndex > 0) {
+                state.currentCriterionIndex--;
+                showCurrentCriterion();
+            }
+        }
+
+        function showNextCriterion() {
+            if (state.currentCriterionIndex < state.criteria.length - 1) {
+                state.currentCriterionIndex++;
+                showCurrentCriterion();
+            }
+        }
+
+        function submitAssistantFeedback() {
+            const assistantKey = `assistant-${state.currentAssistant}`;
+            
+            // Check if all criteria have been rated
+            if (!state.assistantResponses[assistantKey] || 
+                state.assistantResponses[assistantKey].length !== state.criteria.length) {
+                alert('Please rate all criteria before submitting.');
+                return;
+            }
+            
+            // Mark assistant as completed
+            state.completedAssistants[state.currentAssistant] = true;
+            
+            // Update UI
+            updateAssistantButtons();
+            
+            // Return to assistants view
+            elements.criteriaView.classList.add('hidden');
+            elements.assistantsView.classList.remove('hidden');
+            
+            // Show final submit button if all assistants are completed
+            const allCompleted = state.assistants.every((_, index) => state.completedAssistants[index]);
+            elements.finalSubmitContainer.classList.toggle('hidden', !allCompleted);
+        }
+
+        function submitAllFeedback() {
+            // Prepare response data
+            const response = {
+                timestamp: new Date().toISOString(),
+                ratings: {}
+            };
+            
+            // Collect all ratings
+            for (let i = 0; i < state.assistants.length; i++) {
+                const assistantKey = `assistant-${i}`;
+                if (state.assistantResponses[assistantKey]) {
+                    response.ratings[state.assistants[i]] = state.assistantResponses[assistantKey];
+                }
+            }
+            
+            // Add to survey data
+            state.surveyData.responses.push(response);
+            state.surveyData.completedSurveys++;
+            
+            // Save data
+            saveData();
+            
+            // Reset survey state
+            state.assistantResponses = {};
+            state.completedAssistants = {};
+            
+            // Update UI
+            updateAssistantButtons();
+            elements.finalSubmitContainer.classList.add('hidden');
+            
+            alert('Thank you for completing the survey!');
+        }
+
+        // UI update functions
+        function updateUI() {
+            if (elements.adminDashboard.classList.contains('active')) {
+                updateAdminUI();
+            } else {
+                updateSurveyUI();
+            }
+        }
+
+        function updateAdminUI() {
+            // Update stats
+            elements.pageViews.textContent = state.surveyData.pageViews;
+            elements.completedSurveys.textContent = state.surveyData.completedSurveys;
+            
+            // Update assistants list
+            elements.assistantsList.innerHTML = '';
+            state.assistants.forEach((assistant, index) => {
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                item.innerHTML = `
+                    <span>${assistant}</span>
+                    <div class="list-item-actions">
+                        <button class="btn btn-primary btn-small edit-assistant" data-index="${index}">Edit</button>
+                        <button class="btn btn-danger btn-small delete-assistant" data-index="${index}">Delete</button>
+                    </div>
+                `;
+                elements.assistantsList.appendChild(item);
+            });
+            
+            // Add event listeners to edit/delete buttons
+            document.querySelectorAll('.edit-assistant').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const newName = prompt('Enter new name:', state.assistants[index]);
+                    if (newName !== null) {
+                        editAssistant(index, newName);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.delete-assistant').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    if (confirm('Are you sure you want to delete this assistant?')) {
+                        deleteAssistant(index);
+                    }
+                });
+            });
+            
+            // Update criteria list
+            elements.criteriaList.innerHTML = '';
+            state.criteria.forEach((criterion, index) => {
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                item.innerHTML = `
+                    <span>${criterion}</span>
+                    <div class="list-item-actions">
+                        <button class="btn btn-primary btn-small edit-criterion" data-index="${index}">Edit</button>
+                        <button class="btn btn-danger btn-small delete-criterion" data-index="${index}">Delete</button>
+                    </div>
+                `;
+                elements.criteriaList.appendChild(item);
+            });
+            
+            // Add event listeners to edit/delete buttons
+            document.querySelectorAll('.edit-criterion').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const newTitle = prompt('Enter new title:', state.criteria[index]);
+                    if (newTitle !== null) {
+                        editCriterion(index, newTitle);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.delete-criterion').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    if (confirm('Are you sure you want to delete this criterion?')) {
+                        deleteCriterion(index);
+                    }
+                });
+            });
+            
+            // Update chart
+            updateChart();
+        }
+
+        function updateSurveyUI() {
+            updateAssistantButtons();
+        }
+
+        function updateAssistantButtons() {
+            elements.assistantsGrid.innerHTML = '';
+            
+            state.assistants.forEach((assistant, index) => {
+                const button = document.createElement('button');
+                button.className = 'assistant-btn';
+                if (state.completedAssistants[index]) {
+                    button.classList.add('completed');
+                }
+                button.textContent = assistant;
+                button.addEventListener('click', () => {
+                    startAssistantSurvey(index);
+                });
+                
+                elements.assistantsGrid.appendChild(button);
+            });
+        }
+
+        function updateChart() {
+            // Calculate average scores per assistant
+            const scores = state.assistants.map(assistant => {
+                const assistantResponses = state.surveyData.responses
+                    .map(response => response.ratings[assistant])
+                    .filter(rating => rating !== undefined);
+                
+                if (assistantResponses.length === 0) return 0;
+                
+                // Calculate average across all criteria and responses
+                let totalScore = 0;
+                let totalCount = 0;
+                
+                assistantResponses.forEach(response => {
+                    response.forEach(rating => {
+                        totalScore += rating;
+                        totalCount++;
+                    });
+                });
+                
+                return totalCount > 0 ? Math.round(totalScore / totalCount) : 0;
+            });
+            
+            // Destroy previous chart if it exists
+            if (scoresChart) {
+                scoresChart.destroy();
+            }
+            
+            // Create new chart
+            const ctx = elements.scoresChart.getContext('2d');
+            scoresChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: state.assistants,
+                    datasets: [{
+                        label: 'Average Score',
+                        data: scores,
+                        backgroundColor: 'rgba(211, 47, 47, 0.7)',
+                        borderColor: 'rgba(211, 47, 47, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize the application when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

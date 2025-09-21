@@ -1,0 +1,16 @@
+{
+    "assistants": [
+        "معاون الف",
+        "معاون ب"
+    ],
+    "criteria": [
+        "کیفیت عملکرد",
+        "تعهد به کار",
+        "همکاری با دیگران"
+    ],
+    "surveyData": {
+        "pageViews": 0,
+        "completedSurveys": 0,
+        "responses": []
+    }
+}

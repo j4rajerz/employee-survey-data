@@ -1,136 +1,105 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const employeePanel = document.getElementById('employee-panel');
-    const assistantsButtons = document.getElementById('assistants-buttons');
-    const finalSubmitBtn = document.getElementById('final-submit-btn');
-    const surveyModal = document.getElementById('survey-modal');
-    const surveyAssistantName = document.getElementById('survey-assistant-name');
-    const surveyCriteria = document.getElementById('survey-criteria');
-    const submitAssistantSurveyBtn = document.getElementById('submit-assistant-survey-btn');
+// employee.js - بازنویسی برای مدیریت کامل نظرسنجی کارمندان، راست‌چین و فارسی
 
-    let currentAssistantIndex = -1;
-    let employeeResponses = [];
+import { fetchData, saveData } from './github.js';
 
-    async function initEmployeePanel() {
-        employeePanel.classList.remove('hidden');
-        const data = await getData();
-        if (!data) return;
+let currentUser = null;
+let currentSurvey = {};
+let managers = [];
+let factors = {};
+let finishedManagers = [];
 
-        renderAssistantButtons(data.assistants);
-        setupEventListeners(); // Call setup for event listeners
+async function init() {
+    document.body.dir = "rtl";
+    document.getElementById("employee-panel").style.display = "block";
+    document.getElementById("manager-panel").style.display = "none";
+    currentUser = prompt("لطفاً نام خود را وارد کنید:");
+    if (!currentUser) {
+        alert("ورود نام الزامی است.");
+        return;
     }
+    await loadMeta();
+    renderManagerButtons();
+}
 
-    function renderAssistantButtons(assistants) {
-        assistantsButtons.innerHTML = '';
-        assistants.forEach((assistant, index) => {
-            const button = document.createElement('button');
-            button.textContent = assistant;
-            button.dataset.index = index;
-            button.addEventListener('click', () => startSurveyForAssistant(index, assistant));
-            assistantsButtons.appendChild(button);
-        });
+async function loadMeta() {
+    const data = await fetchData();
+    managers = data.managers;
+    factors = data.factors;
+    // ساختار ذخیره‌سازی: { surveys: { [username]: { [manager]: { [factor]: rate } } } }
+    if (!data.surveys) data.surveys = {};
+    currentSurvey = data.surveys[currentUser] || {};
+}
+
+function renderManagerButtons() {
+    const btnContainer = document.getElementById('manager-buttons');
+    btnContainer.innerHTML = '';
+    managers.forEach(manager => {
+        const btn = document.createElement('button');
+        btn.innerText = manager;
+        btn.className = 'button' + (currentSurvey[manager] ? ' finished' : '');
+        btn.onclick = () => showManagerSurvey(manager);
+        btnContainer.appendChild(btn);
+    });
+    document.getElementById('final-submit').onclick = submitAll;
+}
+
+function showManagerSurvey(manager) {
+    const container = document.getElementById('survey-container');
+    container.innerHTML = `<h3>ارزیابی ${manager}</h3>`;
+    const ul = document.createElement('ul');
+    factors[manager].forEach(factor => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span>${factor}</span>
+            <button onclick="selectRate('${manager}','${factor}','خوب', this)">خوب</button>
+            <button onclick="selectRate('${manager}','${factor}','متوسط', this)">متوسط</button>
+            <button onclick="selectRate('${manager}','${factor}','ضعیف', this)">ضعیف</button>
+        `;
+        ul.appendChild(li);
+    });
+    container.appendChild(ul);
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = "button";
+    saveBtn.innerText = "ثبت ارزیابی این معاون";
+    saveBtn.onclick = () => saveManagerSurvey(manager);
+    container.appendChild(saveBtn);
+}
+
+window.selectRate = function(manager, factor, rate, btn) {
+    if (!currentSurvey[manager]) currentSurvey[manager] = {};
+    currentSurvey[manager][factor] = rate;
+    // Highlight selected
+    Array.from(btn.parentElement.querySelectorAll('button')).forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function saveManagerSurvey(manager) {
+    // بررسی تکمیل بودن همه شاخص‌ها
+    let allDone = true;
+    factors[manager].forEach(factor => {
+        if (!currentSurvey[manager] || !currentSurvey[manager][factor]) allDone = false;
+    });
+    if (!allDone) {
+        alert('لطفاً همه شاخص‌ها را امتیاز دهید.');
+        return;
     }
+    finishedManagers.push(manager);
+    renderManagerButtons();
+    document.getElementById('survey-container').innerHTML = `<span style="color:green;">ارزیابی ${manager} با موفقیت ثبت شد.</span>`;
+}
 
-    async function startSurveyForAssistant(index, name) {
-        currentAssistantIndex = index;
-        surveyAssistantName.textContent = name;
-        const data = await getData();
-        renderCriteriaForSurvey(data.criteria);
-        surveyModal.classList.remove('hidden');
+async function submitAll() {
+    if (finishedManagers.length < managers.length) {
+        alert('ابتدا همه معاونین را ارزیابی کنید.');
+        return;
     }
+    const data = await fetchData();
+    if (!data.surveys) data.surveys = {};
+    data.surveys[currentUser] = currentSurvey;
+    await saveData(data);
+    alert('نظرسنجی شما با موفقیت ثبت شد. متشکریم!');
+    document.getElementById('employee-panel').style.display = "none";
+}
 
-    function renderCriteriaForSurvey(criteria) {
-        surveyCriteria.innerHTML = '';
-        criteria.forEach((criterion, index) => {
-            const div = document.createElement('div');
-            div.className = 'criterion';
-            div.innerHTML = `<p>${criterion}</p>`;
-            
-            const goodBtn = document.createElement('button');
-            goodBtn.textContent = 'خوب';
-            goodBtn.dataset.score = 100;
-            
-            const mediumBtn = document.createElement('button');
-            mediumBtn.textContent = 'متوسط';
-            mediumBtn.dataset.score = 50;
-
-            const weakBtn = document.createElement('button');
-            weakBtn.textContent = 'ضعیف';
-            weakBtn.dataset.score = 0;
-
-            div.appendChild(goodBtn);
-            div.appendChild(mediumBtn);
-            div.appendChild(weakBtn);
-
-            [goodBtn, mediumBtn, weakBtn].forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    // Remove selected from siblings
-                    [...e.target.parentElement.children].forEach(child => child.classList.remove('selected'));
-                    e.target.classList.add('selected');
-                });
-            });
-
-            surveyCriteria.appendChild(div);
-        });
-    }
-
-    function setupEventListeners() {
-        submitAssistantSurveyBtn.addEventListener('click', () => {
-            const scores = [];
-            const criteriaElements = surveyCriteria.querySelectorAll('.criterion');
-            let allAnswered = true;
-            criteriaElements.forEach(c => {
-                const selected = c.querySelector('button.selected');
-                if (selected) {
-                    scores.push(parseInt(selected.dataset.score));
-                } else {
-                    allAnswered = false;
-                }
-            });
-
-            if (allAnswered) {
-                employeeResponses.push({
-                    assistantIndex: currentAssistantIndex,
-                    scores: scores
-                });
-                surveyModal.classList.add('hidden');
-                
-                const assistantButton = assistantsButtons.querySelector(`button[data-index='${currentAssistantIndex}']`);
-                assistantButton.classList.add('completed');
-
-                checkIfAllCompleted();
-            } else {
-                alert('لطفا به تمام معیارها پاسخ دهید.');
-            }
-        });
-
-        finalSubmitBtn.addEventListener('click', async () => {
-            const data = await getData();
-            employeeResponses.forEach(res => {
-                data.surveyData.responses.push({
-                    ...res,
-                    timestamp: new Date().toISOString()
-                });
-            });
-            data.surveyData.completedSurveys++;
-            await updateData(data, 'Submit new survey');
-            alert('نظرسنجی شما با موفقیت ثبت شد.');
-            employeePanel.classList.add('hidden');
-            document.getElementById('entry-page').classList.remove('hidden');
-        });
-    }
-
-    function checkIfAllCompleted() {
-        const allButtons = assistantsButtons.querySelectorAll('button');
-        const completedButtons = assistantsButtons.querySelectorAll('button.completed');
-        if (allButtons.length === completedButtons.length) {
-            finalSubmitBtn.classList.remove('hidden');
-        }
-    }
-
-    window.initEmployeePanel = initEmployeePanel;
-
-    window.logout = function() {
-        employeePanel.classList.add('hidden');
-        document.getElementById('role-selection').classList.remove('hidden');
-    }
-});
+window.onload = init;

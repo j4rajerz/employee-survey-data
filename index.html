@@ -2,173 +2,63 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سامانه نظرسنجی عملکرد معاونین</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>نظرسنجی عملکرد کارکنان</title>
     <link rel="stylesheet" href="style.css">
+    <!-- فونت فارسی -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <!-- صفحه انتخاب نقش -->
-        <section id="role-selection" class="card">
-            <img src="logo.png" alt="لوگو" class="logo-img">
-            <h2>سامانه نظرسنجی عملکرد معاونین</h2>
-            <p>لطفاً نقش خود را انتخاب نمایید:</p>
-            
-            <div class="role-options">
-                <div class="role-card card" onclick="selectRole('manager')">
-                    <div class="role-icon">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <h3>مدیر سیستم</h3>
-                    <p>ورود به پنل مدیریتی سامانه</p>
-                </div>
-                
-                <div class="role-card card" onclick="selectRole('employee')">
-                    <div class="role-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h3>کارمند</h3>
-                    <p>ورود به صفحه نظرسنجی</p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- فرم ورود مدیر -->
-        <section id="manager-login" class="card hidden">
-            <img src="logo.png" alt="لوگو" class="logo-img">
-            <h2 class="card-title">ورود مدیر سیستم</h2>
-            
-            <div class="form-group">
-                <label for="username">نام کاربری:</label>
-                <input type="text" id="username" class="form-control" placeholder="نام کاربری خود را وارد کنید">
-            </div>
-            
-            <div class="form-group">
-                <label for="password">رمز عبور:</label>
-                <input type="password" id="password" class="form-control" placeholder="رمز عبور خود را وارد کنید">
-            </div>
-            
-            <button class="btn" onclick="loginManager()">ورود به پنل مدیریت</button>
-            <button class="btn btn-danger" onclick="backToRoleSelection()">بازگشت</button>
-        </section>
-        
-        <!-- داشبورد مدیر -->
-        <section id="manager-dashboard" class="hidden">
-            <div class="header">
-                <img src="logo.png" alt="لوگو" class="logo-img">
-                <div class="logo">پنل مدیریت</div>
-                <div class="user-menu">
-                    <button class="btn" onclick="showSettings()">
-                        <i class="fas fa-cog"></i> تنظیمات
-                    </button>
-                    <button class="btn btn-danger" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i> خروج
-                    </button>
-                    <button class="btn" onclick="backToRoleSelection()">
-                        <i class="fas fa-arrow-left"></i> بازگشت
-                    </button>
-                </div>
-            </div>
-            
-            <div id="main-dashboard-content">
-                <div class="stats-container">
-                    <div class="stat-card card">
-                        <div class="stat-label">تعداد نظرسنجی‌ها</div>
-                        <div class="stat-value" id="survey-count">0</div>
-                        <div>تعداد کل نظرسنجی‌های تکمیل شده</div>
-                    </div>
-                    
-                    <div class="stat-card card">
-                        <div class="stat-label">تعداد بازدیدها</div>
-                        <div class="stat-value" id="page-views">0</div>
-                        <div>تعداد کل بازدیدهای صفحه</div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <h3 class="card-title">میانگین امتیازات معاونین</h3>
-                    <div class="chart-container">
-                        <canvas id="assistant-chart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- بخش تنظیمات مدیر -->
-        <section id="manager-settings" class="card hidden">
-            <h2 class="card-title">تنظیمات سیستم</h2>
-            
-            <div class="settings-section">
-                <h3 class="settings-title">مدیریت معاونین</h3>
-                <button class="btn" onclick="addNewAssistant()">
-                    <i class="fas fa-plus"></i> افزودن معاون جدید
-                </button>
-                
-                <div id="assistants-list">
-                    <!-- لیست معاونین در اینجا نمایش داده می شود -->
-                </div>
-            </div>
-            
-            <div class="settings-section">
-                <h3 class="settings-title">مدیریت شاخص‌های ارزیابی</h3>
-                <button class="btn" onclick="addNewCriterion()">
-                    <i class="fas fa-plus"></i> افزودن شاخص جدید
-                </button>
-                
-                <div id="criteria-list">
-                    <!-- لیست شاخص ها در اینجا نمایش داده می شود -->
-                </div>
-            </div>
-            
-            <button class="btn" onclick="hideSettings()">بازگشت به منوی اصلی</button>
-        </section>
-        
-        <!-- صفحه نظرسنجی کارمند -->
-        <section id="employee-survey" class="hidden">
-            <div class="header">
-                <img src="logo.png" alt="لوگو" class="logo-img">
-                <div class="logo">نظرسنجی عملکرد معاونین</div>
-                <button class="btn btn-danger" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> خروج
-                </button>
-                <button class="btn" onclick="backToRoleSelection()">
-                    <i class="fas fa-arrow-left"></i> بازگشت
-                </button>
-            </div>
-            
-            <div class="card">
-                <h2 class="card-title">لیست معاونین</h2>
-                <p>لطفاً برای هر معاون، فرم نظرسنجی را تکمیل نمایید.</p>
-                
-                <div class="assistant-list" id="assistant-list">
-                    <!-- لیست معاونین در اینجا نمایش داده می شود -->
-                </div>
-                
-                <button class="btn btn-success" id="final-submit-btn" onclick="submitFinalSurvey()">ثبت نهایی نظرسنجی</button>
-            </div>
-        </section>
-        
-        <!-- صفحه ارزیابی معاون -->
-        <section id="assistant-evaluation" class="card hidden">
-            <h2 class="card-title" id="evaluation-title">ارزیابی معاون</h2>
-            
-            <div class="criteria-container" id="criteria-container">
-                <!-- معیارهای ارزیابی در اینجا نمایش داده می شود -->
-            </div>
-            
-            <div class="navigation-buttons">
-                <button class="btn btn-warning" id="prev-criterion" onclick="prevCriterion()">معیار قبلی</button>
-                <button class="btn" id="next-criterion" onclick="nextCriterion()">معیار بعدی</button>
-                <button class="btn btn-success hidden" id="submit-evaluation" onclick="submitEvaluation()">ثبت ارزیابی</button>
-            </div>
-        </section>
-    </div>
 
-    <script src="script.js"></script>
-    <script src="employee.js"></script>
-    <script src="manager.js"></script>
-    <script src="github.js"></script>
+        <!-- انتخاب نقش -->
+        <div id="role-selection" class="card" style="text-align:center;">
+            <div class="card-title">انتخاب نقش</div>
+            <button id="employee-btn" class="button">کارمند</button>
+            <button id="manager-btn" class="button">مدیر</button>
+        </div>
+
+        <!-- پنل کارمند -->
+        <div id="employee-panel" class="card" style="display:none;">
+            <div class="card-title">نظرسنجی کارمند</div>
+            <div id="manager-buttons"></div>
+            <div id="survey-container"></div>
+            <button id="final-submit" class="button">ثبت نهایی نظرسنجی</button>
+        </div>
+
+        <!-- پنل مدیر -->
+        <div id="manager-panel" class="card" style="display:none;">
+            <div class="card-title">داشبورد مدیر</div>
+            <div>
+                تعداد نظرسنجی‌های ثبت‌شده: <span id="survey-count"></span><br>
+                مجموع بازدید: <span id="visit-count"></span>
+            </div>
+            <canvas id="chart" height="120"></canvas>
+            <div>
+                <ul id="managers-list"></ul>
+                <button id="add-manager-btn" class="button">افزودن معاون</button>
+                <button id="add-factor-btn" class="button">افزودن شاخص</button>
+            </div>
+            <button id="refresh-btn" class="button">بروزرسانی داشبورد</button>
+            <button id="logout-btn" class="button">خروج</button>
+        </div>
+    </div>
+    <!-- ماژول‌های جاوااسکریپت -->
+    <script type="module">
+        import './github.js';
+        import { initManager } from './manager.js';
+        import './employee.js';
+
+        document.getElementById('employee-btn').onclick = () => {
+            document.getElementById('role-selection').style.display = 'none';
+            // employee.js بصورت خودکار init را روی window.onload اجرا می‌کند
+            document.getElementById('employee-panel').style.display = "block";
+        };
+        document.getElementById('manager-btn').onclick = () => {
+            document.getElementById('role-selection').style.display = 'none';
+            window.initManager();
+        };
+    </script>
 </body>
 </html>

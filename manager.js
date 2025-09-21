@@ -1,146 +1,94 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const managerDashboard = document.getElementById('manager-dashboard');
-    const pageViewsEl = document.getElementById('page-views');
-    const completedSurveysEl = document.getElementById('completed-surveys');
-    const resultsChartEl = document.getElementById('results-chart');
-    const assistantsList = document.getElementById('assistants-list');
-    const newAssistantInput = document.getElementById('new-assistant');
-    const addAssistantBtn = document.getElementById('add-assistant-btn');
-    const criteriaList = document.getElementById('criteria-list');
-    const newCriterionInput = document.getElementById('new-criterion');
-    const addCriterionBtn = document.getElementById('add-criterion-btn');
+// manager.js - داشبورد مدیر، نمودار زنده و مدیریت معاونین/شاخص‌ها
 
-    let chart;
+import { fetchData, saveData } from './github.js';
 
-    async function initManagerPanel() {
-        managerDashboard.classList.remove('hidden');
-        await loadDashboard();
-        setupEventListeners();
-    }
+let chart = null;
 
-    function setupEventListeners() {
-        addAssistantBtn.addEventListener('click', addAssistant);
-        addCriterionBtn.addEventListener('click', addCriterion);
-    }
+async function initManager() {
+    document.body.dir = "rtl";
+    document.getElementById("employee-panel").style.display = "none";
+    document.getElementById("manager-panel").style.display = "block";
+    await renderDashboard();
+    document.getElementById("refresh-btn").onclick = renderDashboard;
+    document.getElementById("logout-btn").onclick = () => location.reload();
+}
 
-    async function loadDashboard() {
-        const data = await getData();
-        if (!data) return;
+async function renderDashboard() {
+    const data = await fetchData();
+    document.getElementById("survey-count").innerText = Object.keys(data.surveys || {}).length;
+    document.getElementById("visit-count").innerText = data.visits || "-";
 
-        pageViewsEl.textContent = data.surveyData.pageViews;
-        completedSurveysEl.textContent = data.surveyData.completedSurveys;
+    await renderChart(data);
+    renderManagePanel(data);
+}
 
-        renderAssistants(data.assistants);
-        renderCriteria(data.criteria);
-        renderChart(data.assistants, data.surveyData.responses);
-    }
+async function renderChart(data) {
+    const ctx = document.getElementById('chart').getContext('2d');
+    let managers = data.managers || [];
+    let factors = data.factors || {};
+    let surveys = data.surveys || {};
 
-    function renderAssistants(assistants) {
-        assistantsList.innerHTML = '';
-        assistants.forEach((assistant, index) => {
-            const li = document.createElement('li');
-            li.textContent = assistant;
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'حذف';
-            deleteBtn.onclick = () => deleteAssistant(index);
-            li.appendChild(deleteBtn);
-            assistantsList.appendChild(li);
+    let avgScores = managers.map(manager => {
+        let total = 0, count = 0;
+        Object.values(surveys).forEach(survey => {
+            if (survey[manager]) {
+                Object.entries(survey[manager]).forEach(([factor, rate]) => {
+                    if (rate === "خوب") total += 2;
+                    else if (rate === "متوسط") total += 1;
+                    count++;
+                });
+            }
         });
-    }
+        return count ? (total / count).toFixed(2) : 0;
+    });
 
-    function renderCriteria(criteria) {
-        criteriaList.innerHTML = '';
-        criteria.forEach((criterion, index) => {
-            const li = document.createElement('li');
-            li.textContent = criterion;
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'حذف';
-            deleteBtn.onclick = () => deleteCriterion(index);
-            li.appendChild(deleteBtn);
-            criteriaList.appendChild(li);
-        });
-    }
-
-    function renderChart(assistants, responses) {
-        const averageScores = assistants.map((_, assistantIndex) => {
-            const assistantResponses = responses.filter(r => r.assistantIndex === assistantIndex);
-            if (assistantResponses.length === 0) return 0;
-            const totalScore = assistantResponses.reduce((sum, r) => sum + r.scores.reduce((s, c) => s + c, 0), 0);
-            const totalCriteria = assistantResponses.length * assistantResponses[0].scores.length;
-            return (totalScore / (totalCriteria * 100)) * 100;
-        });
-
-        if (chart) {
-            chart.data.labels = assistants;
-            chart.data.datasets[0].data = averageScores;
-            chart.update();
-        } else {
-            chart = new Chart(resultsChartEl, {
-                type: 'bar',
-                data: {
-                    labels: assistants,
-                    datasets: [{
-                        label: 'میانگین امتیاز',
-                        data: averageScores,
-                        backgroundColor: assistants.map(() => `hsl(${Math.random() * 360}, 70%, 50%)`)
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100
-                        }
-                    }
-                }
-            });
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: managers,
+            datasets: [{
+                label: 'میانگین امتیاز',
+                data: avgScores,
+                backgroundColor: '#4CAF50'
+            }]
+        },
+        options: {
+            scales: {
+                y: { min: 0, max: 2 }
+            }
         }
-    }
+    });
+}
 
-    async function addAssistant() {
-        const newAssistant = newAssistantInput.value.trim();
-        if (newAssistant) {
-            const data = await getData();
-            data.assistants.push(newAssistant);
-            await updateData(data, 'Add new assistant');
-            newAssistantInput.value = '';
-            loadDashboard();
-        }
-    }
+function renderManagePanel(data) {
+    // مدیریت اسامی معاونین و شاخص‌ها
+    const managerList = document.getElementById('managers-list');
+    managerList.innerHTML = '';
+    (data.managers || []).forEach(m => {
+        const li = document.createElement('li');
+        li.innerText = m + ' - شاخص‌ها: ' + (data.factors[m] || []).join(", ");
+        managerList.appendChild(li);
+    });
+    // دکمه افزودن
+    document.getElementById('add-manager-btn').onclick = async () => {
+        const name = prompt('نام معاون جدید؟');
+        if (!name) return;
+        data.managers.push(name);
+        data.factors[name] = [];
+        await saveData(data);
+        renderDashboard();
+    };
+    // افزودن شاخص برای هر معاون
+    document.getElementById('add-factor-btn').onclick = async () => {
+        const name = prompt('نام معاون؟');
+        if (!data.managers.includes(name)) { alert('معاون یافت نشد!'); return; }
+        const factor = prompt('عنوان شاخص جدید؟');
+        if (!factor) return;
+        data.factors[name].push(factor);
+        await saveData(data);
+        renderDashboard();
+    };
+}
 
-    async function deleteAssistant(index) {
-        const data = await getData();
-        data.assistants.splice(index, 1);
-        // Also remove related responses
-        data.surveyData.responses = data.surveyData.responses.filter(r => r.assistantIndex !== index);
-        await updateData(data, 'Delete assistant');
-        loadDashboard();
-    }
-
-    async function addCriterion() {
-        const newCriterion = newCriterionInput.value.trim();
-        if (newCriterion) {
-            const data = await getData();
-            data.criteria.push(newCriterion);
-            await updateData(data, 'Add new criterion');
-            newCriterionInput.value = '';
-            loadDashboard();
-        }
-    }
-
-    async function deleteCriterion(index) {
-        const data = await getData();
-        data.criteria.splice(index, 1);
-        // Also remove related scores from responses
-        data.surveyData.responses.forEach(r => r.scores.splice(index, 1));
-        await updateData(data, 'Delete criterion');
-        loadDashboard();
-    }
-
-    window.initManagerPanel = initManagerPanel;
-
-    window.logout = function() {
-        managerDashboard.classList.add('hidden');
-        document.getElementById('role-selection').classList.remove('hidden');
-    }
-});
+window.initManager = initManager;
